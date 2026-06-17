@@ -1,82 +1,132 @@
-# steam-price-prediction
+# Steam Price Prediction — Grupo 05
 
-Este repositório contém o projeto de Inteligência Artificial e Ciência de Dados desenvolvido pelo Grupo 05. O objetivo central é analisar o ecossistema de jogos da plataforma Steam e construir um modelo preditivo capaz de estimar o preço de prateleira de um jogo com base em suas características técnicas e de mercado.
+Projeto de Machine Learning desenvolvido pelo **Grupo 05** para prever o preço de lançamento de jogos na plataforma Steam com base em características técnicas e de mercado.
 
-## Equipa (Grupo 05)
-* João Vitor Candido
-* João Vitor Dysarz
-* João Vitor Haas
-* Nathan Daniel Breier
-* Vitor Hugo Dallanol
+## Equipe
+
+| Nome |
+|:-----|
+| João Vitor Candido |
+| João Vitor Dysarz |
+| João Vitor Haas |
+| Nathan Daniel Breier |
+| Vitor Hugo Dallanol |
 
 ---
 
 ## Definição do Problema
-Pergunta de Negócio: Qual o preço justo de um jogo baseado nas suas características (no lançamento)?
 
-No mercado de desenvolvimento de software, precificar um produto digital é um desafio. O nosso modelo visa ajudar estúdios independentes e publicadoras a encontrarem o ponto ótimo de preço, evitando barreiras de entrada financeiras (preço muito alto) ou desvalorização do produto (preço muito baixo).
+**Pergunta de Negócio:** Qual o preço justo de um jogo com base nas suas características no lançamento?
 
-Tipo de Problema de Machine Learning:
-* Regressão Linear (Supervisionado)
+**Contexto:** Precificar um produto digital é um dos maiores desafios para estúdios independentes. Um preço muito alto cria barreira de entrada; muito baixo desvaloriza o produto. Nosso modelo oferece um *termômetro de mercado* baseado em dados reais da Steam.
+
+**Tipo de Problema:** Regressão Supervisionada (target: `price_usd`)
 
 ---
 
-## Base de Dados (Dataset)
-* Nome: Steam Dataset for Recommendation & Prediction
-* Fonte: [Kaggle](https://www.kaggle.com/datasets/patelris/steam-top-1495-games-dataset)
-* Variável Alvo (Target): price_usd (Preço Base em Dólares)
+## Dataset
+
+- **Nome:** Steam Top Games 2026
+- **Fonte:** [Kaggle — Steam Top 1495 Games Dataset](https://www.kaggle.com/datasets/patelris/steam-top-1495-games-dataset)
+- **Volume:** 1.495 jogos × 29 colunas
+- **Escopo:** Apenas jogos pagos (1.113 após remoção dos Free-to-Play)
 
 ---
 
 ## Estrutura do Repositório
-O projeto está dividido em Sprints quinzenais, seguindo a metodologia ágil e o ciclo de vida CRISP-DM. Os dados e notebooks de cada etapa ficam armazenados juntos em suas respetivas pastas.
 
-```text
-steam-price-prediction
-|-- data
-|   |-- Sprint_01
-|   |   |-- steam_top_games_2026.csv
-|   |   |-- Projeto_Grupo_05_Sprint_01.ipynb
-|   |-- sprint_02
-|   |-- sprint_03
-|   |-- sprint_04
-|-- README.md
+```
+AnaliseDataset/
+├── README.md
+├── requirements.txt
+└── data/
+    ├── Sprint_01/
+    │   ├── steam_top_games_2026.csv        ← Dataset bruto original
+    │   └── Projeto_Grupo_05_Sprint_01.ipynb
+    ├── Sprint_02/
+    │   ├── Projeto_Grupo_05_Sprint_02.ipynb
+    │   └── data/Sprint_02/
+    │       ├── steam_train_60.csv           ← Split de treino (60%)
+    │       ├── steam_val_20.csv             ← Split de validação (20%)
+    │       └── steam_test_20.csv            ← Split de teste blindado (20%)
+    ├── Sprint_03/
+    │   └── Projeto_Grupo_05_Sprint_03.ipynb
+    └── Sprint_04/
+        ├── Projeto_Grupo_05_Sprint_04.ipynb
+        └── modelo_steam_log_v1.pkl          ← Gerado ao executar o notebook
 ```
 
 ---
 
-## Instruções e Validação da Sprint 1
+## Resumo por Sprint (Ciclo CRISP-DM)
 
-Esta secção detalha os requisitos da Sprint 1 (30/04 a 14/05) e como o nosso projeto atende a cada um deles, garantindo a qualidade técnica e a reprodutibilidade da entrega.
+### Sprint 1 — Entendimento do Negócio e EDA
+- Escolha do dataset e definição do problema de negócio
+- Análise exploratória univariada e bivariada
+- Diagnóstico de valores nulos (`metacritic_score`: 57% ausente)
+- Validação de **4 hipóteses** sobre o que influencia o preço:
+  - H1: Gênero (RPG/Simulation > Indie/Action) ✅
+  - H2: Nota Metacritic (correlação fraca, relação não-linear) ⚠️
+  - H3: Inflação — ano de lançamento influencia preço ✅
+  - H4: Publisher-Backed cobra mais que Self-Published ✅
 
-### Objetivos Atingidos
-* Escolha de Dataset e Problema de Negócio: Selecionámos o dataset do ecossistema Steam (Steam Dataset for Recommendation & Prediction) para resolver um problema real de precificação.
-* Análise Exploratória de Dados (EDA) Completa: O projeto contém a limpeza dos dados, tratamento de valores nulos (Missing Values), e a validação estatística e visual de 4 hipóteses de negócio detalhadas.
+### Sprint 2 — Pré-Processamento e Feature Engineering
+- Remoção de outliers extremos e jogos gratuitos
+- Engenharia de features: `genre_count`, `approval_rating`, `publishing_model`, `release_year`
+- Estratégia de imputação (mediana para contínuas, moda para discreta/categórica)
+- Split estratificado 60/20/20 com seed fixo (reprodutibilidade)
+- Pipeline de pré-processamento encapsulado (sem data leakage)
+
+### Sprint 3 — Modelagem e Otimização
+- Avaliação de 3 algoritmos via Validação Cruzada 5-Fold:
+  - Regressão Linear (baseline)
+  - **Random Forest** ← selecionado pela menor variância entre folds
+  - XGBoost (demonstração com Early Stopping)
+- Transformação logarítmica do target (`log1p`) para mitigar heterocedasticidade
+- GridSearchCV: 36 combinações × 5 folds = 180 fits
+
+### Sprint 4 — Interpretação, Análise Final e Entrega *(este notebook)*
+- Análise aprofundada dos erros (4 visualizações)
+- Feature Importance do modelo campeão
+- Revisão crítica das hipóteses da Sprint 1
+- Tabela consolidada de desempenho (todos os modelos)
+- Limitações honestas e próximos passos documentados
 
 ---
 
-## Como Executar o Projeto (Reprodutibilidade)
+## Modelo Final
 
-Este Jupyter Notebook foi desenvolvido e testado para ser executado nativamente no Google Colab.
+| Parâmetro | Valor |
+|:---|:---|
+| Algoritmo | Random Forest Regressor |
+| Transformação do Target | `np.log1p` / `np.expm1` |
+| Otimização | GridSearchCV (5-Fold) |
+| Features | `metacritic_score`, `genre_count`, `approval_rating`, `release_year`, `publishing_model` |
+| Arquivo exportado | `modelo_steam_log_v1.pkl` |
 
-### Execução via Google Colab
-Para garantir a reprodutibilidade técnica exigida, os dados são importados automaticamente do nosso repositório oficial no GitHub. Não é necessário realizar o upload manual de nenhum ficheiro CSV.
+**Por que Random Forest e não XGBoost?**  
+O Random Forest apresentou menor desvio padrão entre os 5 folds do Cross-Validation (maior estabilidade), o que é preferível a um RMSE médio ligeiramente menor com maior variância. Modelos estáveis generalizam melhor em produção.
 
-Dataset Link (Raw): https://raw.githubusercontent.com/JoaoDysarz/steam-price-prediction/main/data/Sprint_01/steam_top_games_2026.csv
+---
 
-Passos:
-1. Abra o ficheiro .ipynb no ambiente Google Colab.
-2. Certifique-se de que a variável url_github no Passo 1 (Carregamento de Dados) aponta para o link acima.
-3. No menu superior do Colab, clique em Ambiente de execução > Executar tudo (ou utilize o atalho Ctrl + F9).
+## Como Executar
 
-### Execução Local (VS Code / Jupyter)
-Caso opte por executar o projeto fora do ambiente Colab, será necessário instalar as dependências de Python utilizadas no projeto.
+### Google Colab (recomendado)
+1. Abra qualquer `.ipynb` no Colab
+2. Clique em **Ambiente de execução → Executar tudo** (`Ctrl+F9`)
+3. Os dados são carregados automaticamente do GitHub — sem uploads necessários
 
-Requisitos:
-* Python 3.x
-* Bibliotecas: pandas, matplotlib, seaborn, numpy
-
-Comando para instalação:
+### Local (VS Code / Jupyter)
 ```bash
-pip install pandas matplotlib seaborn numpy
+pip install pandas matplotlib seaborn numpy scikit-learn xgboost joblib
+jupyter notebook
 ```
+
+---
+
+## Reprodutibilidade
+
+- `random_state=42` fixo em todos os modelos
+- `KFold(n_splits=5, shuffle=True, random_state=42)` para validação cruzada
+- Split dos dados gerado uma única vez na Sprint 2 e versionado no repositório
+- Pipeline encapsula o pré-processamento — elimina risco de data leakage
