@@ -120,7 +120,7 @@ O Random Forest apresentou menor desvio padrão entre os 5 folds do Cross-Valida
 
 ---
 
-## Resultados Finais (avaliação honesta)
+## Resultados Finais
 
 | Métrica | Modelo Campeão | Baseline (`DummyRegressor`, média) |
 |:---|:---:|:---:|
